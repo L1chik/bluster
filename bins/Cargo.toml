@@ -2,13 +2,18 @@
 name    = "examples"
 version = "0.1.0"
 edition = "2021"
-default-run = "robot"
+default-run = "labs"
 
 [dependencies]
 bevy = "0.7.0"
 bevy_obj = "0.7.0"
+nalgebra = "0.31.0"
 obj-rs = { version =  "0.7.0", default-features = false }
 
+
 [[bin]]
-name = "robot"
-path = "./robot.rs"
+name = "labs"
+path = "./labs.rs"
+
+[dependencies.world]
+path = "../crates/bluster_world"

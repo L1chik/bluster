@@ -1,6 +1,6 @@
 [workspace]
 members = [
-#    "crates/bluster",
+    "crates/bluster",
     "crates/bluster_world",
     "bins",
 ]

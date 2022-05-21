@@ -1,0 +1,11 @@
+[package]
+name = "bluster"
+version = "0.12.0"
+edition = "2021"
+
+[lib]
+name = "bluster"
+path = "../../src/lib.rs"
+
+[dependencies]
+nalgebra = "0.31.0"
