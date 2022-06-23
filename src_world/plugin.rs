@@ -1,11 +1,12 @@
 use bevy::prelude::*;
 use bevy_egui::EguiContext;
-use crate::render::BevyMaterial;
+use crate::render::{BevyMaterial, RenderManager};
 
 pub trait WorldPlugin {
     fn init_plugin(&mut self);
     fn init_render(
         &mut self,
+        render: &mut RenderManager,
         commands: &mut Commands,
         meshes: &mut Assets<Mesh>,
         materials: &mut Assets<BevyMaterial>,
@@ -21,6 +22,7 @@ pub trait WorldPlugin {
     fn update_ui(
         &mut self,
         ui_context: &EguiContext,
+        render: &mut RenderManager,
         commands: &mut Commands,
         meshes: &mut Assets<Mesh>,
         materials: &mut Assets<BevyMaterial>,

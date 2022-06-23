@@ -2,11 +2,31 @@ use std::default::Default;
 use bevy::prelude::*;
 use bevy_obj::*;
 use bevy_egui::EguiContext;
+use bitflags::bitflags;
 use na::Point3;
 
 use crate::arc_ball::{ArcBall, ArcBallPlugin};
 use crate::render::{BevyMaterial, RenderManager};
-use crate::WorldPlugin;
+use crate::{ui, WorldPlugin};
+
+// Flags for program states
+bitflags! {
+    #[derive(Default)]
+    pub struct StateFlags: u32 {
+        const NONE = 0;
+        const SLEEP = 1 << 0;
+        const SHAPES = 1 << 1;
+        const JOINTS = 1 << 2;
+    }
+}
+
+bitflags! {
+    pub struct ActionFlags: u32 {
+        const RESET_WORLD_RENDER = 1 << 0;
+        const PROGRAM_CHANGED = 1 << 1;
+        const RESET = 1 << 2;
+    }
+}
 
 #[derive(PartialEq)]
 pub enum RunMode {
@@ -19,7 +39,9 @@ pub struct WorldState {
     pub picked_body: Option<String>,
     pub program_names: Vec<&'static str>,
     pub selected_program: usize,
-    pub camera_locked: bool
+    pub state_flags: StateFlags,
+    pub action_flags: ActionFlags,
+    camera_locked: bool,
 }
 
 struct SceneBuilders(Vec<(&'static str, fn(&mut World))>);
@@ -52,12 +74,15 @@ pub struct WorldApp {
 impl WorldApp {
     pub fn new_empty() -> Self {
         let render = RenderManager::new();
+        let state_flags = StateFlags::SLEEP;
 
         let state = WorldState {
             running: RunMode::Running,
             picked_body: None,
             program_names: Vec::new(),
             selected_program: 0,
+            state_flags,
+            action_flags: ActionFlags::empty(),
             camera_locked: false
         };
 
@@ -97,6 +122,8 @@ impl WorldApp {
             .insert_non_send_resource(self.plugins)
             .insert_resource(self.state)
             .insert_resource(self.builders)
+            .add_stage_before(CoreStage::Update, "simulation", SystemStage::single_threaded())
+            .add_system_to_stage("simulation", update_world)
             .add_system(egui_action);
 
         init(&mut app);
@@ -114,6 +141,8 @@ impl WorldApp {
     ) -> Self {
         let mut result = WorldApp::new_empty();
 
+        result.state.action_flags
+            .set(ActionFlags::PROGRAM_CHANGED, true);
         result.state.selected_program = default;
         result.set_builders(builders);
 
@@ -122,10 +151,6 @@ impl WorldApp {
 }
 
 impl<'a, 'b, 'c, 'd, 'e, 'f> World<'a, 'b, 'c, 'd, 'e, 'f> {
-    // pub fn set_world_with_params(&mut self) {
-    //     Some(self.render.as_ref()).unwrap().unwrap().add_body();
-    // }
-
     pub fn look_at(&mut self, eye: Point3<f32>, at: Point3<f32>) {
         if !self.state.camera_locked {
             if let Some(render) = &mut self.render {
@@ -143,6 +168,10 @@ impl<'a, 'b, 'c, 'd, 'e, 'f> World<'a, 'b, 'c, 'd, 'e, 'f> {
                 }
             }
         }
+    }
+
+    pub fn handle_events(&mut self, keys: &Input<KeyCode>) {
+        print!("")
     }
 }
 
@@ -170,24 +199,88 @@ fn egui_action(mut ui_ctx: ResMut<EguiContext>, mut cameras: Query<&mut ArcBall>
     }
 }
 
+fn update_world(
+    mut commands: Commands,
+    windows: Res<Windows>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<BevyMaterial>>,
+    builders: NonSendMut<SceneBuilders>,
+    mut render: NonSendMut<RenderManager>,
+    mut state: ResMut<WorldState>,
+    mut plugins: NonSendMut<Plugins>,
+    mut ui_ctx: ResMut<EguiContext>,
+    mut components: Query<(&mut Transform,)>,
+    mut cameras: Query<(&Camera, &GlobalTransform, &mut ArcBall)>,
+    keys: Res<Input<KeyCode>>,
+) {
+    let meshes = &mut *meshes;
+    let last_program = state.selected_program;
+
+    {
+        let render_ctx = WorldRender {
+            render: &mut *render,
+            commands: &mut commands,
+            meshes: &mut *meshes,
+            camera: &mut cameras.iter_mut().next().unwrap().2,
+            material: &mut *materials,
+            components: &mut components,
+        };
+
+        let mut world = World {
+            render: Some(render_ctx),
+            state: &mut *state,
+            plugins: &mut *plugins,
+        };
+
+        world.handle_events(&*keys);
+    }
+
+    {
+        ui::update_ui(&mut ui_ctx, &mut state);
+
+        for plugin in &mut plugins.0 {
+            plugin.update_ui(
+                &mut ui_ctx,
+                &mut render,
+                &mut commands,
+                &mut *meshes,
+                &mut *materials,
+                &mut  components,
+            );
+        }
+    }
+
+    {
+        let reset = state.action_flags.contains(ActionFlags::RESET);
+
+        if reset {
+            state.action_flags.set(ActionFlags::RESET, false);
+            state.camera_locked = true;
+            state.action_flags
+                .set(ActionFlags::PROGRAM_CHANGED, true);
+        }
+
+        // let program_changed = state.action_flags.contains(ActionFlags::PROGRAM_CHANGED);
+        // if program_changed {
+        //     state.action_flags
+        //         .set(ActionFlags::PROGRAM_CHANGED, false);
+        // }
+    }
+
+    if let Some(window) = windows.get_primary() {
+        for (camera, camera_pos, _) in cameras.iter_mut() {
+
+        }
+    }
+
+    // render.draw(
+    //
+    // )
+}
+
 fn setup_environment(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    obj: ResMut<AssetServer>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
     ) {
-    commands.spawn_bundle(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane { size: 30.0 })),
-        material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
-        ..default()
-    });
-
-    commands.spawn_bundle(PbrBundle {
-        mesh: obj.load("3d/lower_arm.obj"),
-        material: materials.add(Color::rgb(1.0, 0.5, 0.3).into()),
-        ..default()
-    });
-
     commands
         .spawn_bundle(DirectionalLightBundle {
         directional_light: DirectionalLight {
@@ -218,3 +311,4 @@ fn setup_environment(
             ..ArcBall::default()
         });
 }
+
