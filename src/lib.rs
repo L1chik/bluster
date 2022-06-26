@@ -1,2 +1,2 @@
-mod rigid_body;
-mod rigid_body_components;
+mod object;
+mod object_parameters;

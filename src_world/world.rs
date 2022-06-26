@@ -311,4 +311,3 @@ fn setup_environment(
             ..ArcBall::default()
         });
 }
-
