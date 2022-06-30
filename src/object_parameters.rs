@@ -1,7 +1,7 @@
-pub struct ObjectPosition {
-
-}
+pub struct ObjectPosition {}
 
 pub struct ObjectParent {}
 
-pub struct ObjectShpe {}
+pub struct ObjectShape {}
+
+pub struct ObjectFlags {}

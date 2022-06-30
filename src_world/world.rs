@@ -50,15 +50,15 @@ struct Plugins(Vec<Box<dyn WorldPlugin>>);
 
 pub struct WorldRender<'a, 'b, 'c, 'd, 'e, 'f> {
     render: &'a mut RenderManager,
-    pub commands: &'a mut Commands<'b, 'c>,
-    pub meshes: &'a mut Assets<Mesh>,
-    pub material: &'a mut Assets<BevyMaterial>,
+    commands: &'a mut Commands<'b, 'c>,
+    meshes: &'a mut Assets<Mesh>,
+    material: &'a mut Assets<BevyMaterial>,
     components: &'a mut Query<'d, 'e, (&'f mut Transform, )>,
     camera: &'a mut ArcBall,
 }
 
 pub struct World<'a, 'b, 'c, 'd, 'e, 'f> {
-    pub render: Option<WorldRender<'a, 'b, 'c, 'd, 'e, 'f>>,
+    render: Option<WorldRender<'a, 'b, 'c, 'd, 'e, 'f>>,
     state: &'a mut WorldState,
     plugins: &'a mut Plugins,
 }
@@ -170,6 +170,8 @@ impl<'a, 'b, 'c, 'd, 'e, 'f> World<'a, 'b, 'c, 'd, 'e, 'f> {
         }
     }
 
+    pub fn init_world(&mut self,
+        objects: )
     pub fn handle_events(&mut self, keys: &Input<KeyCode>) {
         print!("")
     }

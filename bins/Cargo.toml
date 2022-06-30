@@ -17,3 +17,6 @@ path = "./labs.rs"
 
 [dependencies.world]
 path = "../crates/bluster_world"
+
+[dependencies.bluster]
+path = "../crates/bluster"
