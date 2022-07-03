@@ -8,6 +8,7 @@ use na::Point3;
 use crate::arc_ball::{ArcBall, ArcBallPlugin};
 use crate::render::{BevyMaterial, RenderManager};
 use crate::{ui, WorldPlugin};
+use bluster::mesh::{SceneObject, ObjectSet};
 
 // Flags for program states
 bitflags! {
@@ -36,7 +37,7 @@ pub enum RunMode {
 
 pub struct WorldState {
     pub running: RunMode,
-    pub picked_body: Option<String>,
+    pub selected_object: Option<String>,
     pub program_names: Vec<&'static str>,
     pub selected_program: usize,
     pub state_flags: StateFlags,
@@ -78,7 +79,7 @@ impl WorldApp {
 
         let state = WorldState {
             running: RunMode::Running,
-            picked_body: None,
+            selected_object: None,
             program_names: Vec::new(),
             selected_program: 0,
             state_flags,
@@ -170,8 +171,11 @@ impl<'a, 'b, 'c, 'd, 'e, 'f> World<'a, 'b, 'c, 'd, 'e, 'f> {
         }
     }
 
-    pub fn init_world(&mut self,
-        objects: )
+    pub fn init_world(&mut self, objects: ObjectSet) {
+        self.state.action_flags.set(ActionFlags::RESET, true);
+        self.state.selected_object = None;
+    }
+
     pub fn handle_events(&mut self, keys: &Input<KeyCode>) {
         print!("")
     }

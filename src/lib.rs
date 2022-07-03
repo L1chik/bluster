@@ -1,3 +1,8 @@
-pub mod object;
-pub mod object_parameters;
-pub mod object_set;
+extern crate core;
+
+pub mod mesh;
+pub mod data;
+
+pub mod prelude {
+    pub use crate::mesh::*;
+}
