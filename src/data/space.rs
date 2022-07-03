@@ -117,6 +117,15 @@ impl<T> Space<T> {
             .map_err(|_| ())
             .expect("error")
     }
+
+    pub fn get(&self, i: Index) -> Option<&T> {
+        match self.items.get(i.index as usize) {
+            Some(Entry::Used { generation, val }) if *generation == i.generation => {
+                Some(val)
+            }
+            _ => None,
+        }
+    }
 }
 
 impl Index {

@@ -14,6 +14,7 @@ pub trait WorldPlugin {
     );
     fn draw(
         &mut self,
+        render: &mut RenderManager,
         commands: &mut Commands,
         meshes: &mut Assets<Mesh>,
         materials: &mut Assets<BevyMaterial>,

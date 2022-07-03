@@ -28,6 +28,10 @@ impl ObjectSet {
 
         handle
     }
+
+    pub fn get(&self, handle: ObjectHandle) -> Option<&SceneObject> {
+        self.objects.get(handle.0)
+    }
 }
 
 

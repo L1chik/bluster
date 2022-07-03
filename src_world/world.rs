@@ -220,6 +220,7 @@ fn update_world(
     keys: Res<Input<KeyCode>>,
 ) {
     let meshes = &mut *meshes;
+    let materials = &mut *materials;
     let last_program = state.selected_program;
 
     {
@@ -279,13 +280,26 @@ fn update_world(
         }
     }
 
-    // render.draw(
-    //
-    // )
+    render.draw(
+        
+        &mut components,
+        &mut *materials,
+    )
+
+    for plugin in &mut plugins.0 {
+        plugin.draw(
+            &mut render,
+            &mut commands,
+            meshes,
+            materials,
+            &mut components
+        );
+    }
 }
 
 fn setup_environment(
     mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
     ) {
     commands
         .spawn_bundle(DirectionalLightBundle {
@@ -301,6 +315,11 @@ fn setup_environment(
         },
         ..Default::default()
         });
+
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Plane { size: 5.0 })),
+        ..default()
+    });
 
     commands
         .spawn_bundle(PerspectiveCameraBundle {

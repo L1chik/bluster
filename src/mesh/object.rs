@@ -1,9 +1,11 @@
-use nalgebra::Isometry3;
+use nalgebra::{Isometry3, Vector3};
+use parry3d::math::{AngVector, Rotation};
 use parry3d::shape::SharedShape;
 use crate::data::space::Index;
 use super::object_parameters::{ObjectParent, ObjectPosition, ObjectShape, ObjectFlags};
 
 
+#[derive(Clone)]
 pub struct SceneObject {
     pub(crate) shape: ObjectShape,
     pub(crate) parent: Option<ObjectParent>,
@@ -44,11 +46,27 @@ impl ObjectBuilder {
             user_data: self.user_data,
         }
     }
+
+    pub fn rotation(mut self, angle: AngVector<f32>) -> Self {
+        self.position.rotation = Rotation::new(angle);
+
+        self
+    }
+
+    pub fn position(mut self, pos: Isometry3<f32>) -> Self {
+        self.position = pos;
+
+        self
+    }
 }
 
 impl SceneObject {
-    pub fn reset_internal_references(&mut self) {
-        self.
+    pub fn position(&self) -> &Isometry3<f32> {
+        &self.position.0
+    }
+
+    pub fn transltaion(&self) -> &Vector3<f32> {
+        &self.position.0.translation.vector
     }
 }
 
