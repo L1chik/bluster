@@ -9,6 +9,7 @@ use crate::arc_ball::{ArcBall, ArcBallPlugin};
 use crate::render::{BevyMaterial, RenderManager};
 use crate::{ui, WorldPlugin};
 use bluster::mesh::{SceneObject, ObjectSet};
+use crate::parameters::Harness;
 
 // Flags for program states
 bitflags! {
@@ -60,6 +61,7 @@ pub struct WorldRender<'a, 'b, 'c, 'd, 'e, 'f> {
 
 pub struct World<'a, 'b, 'c, 'd, 'e, 'f> {
     render: Option<WorldRender<'a, 'b, 'c, 'd, 'e, 'f>>,
+    harness: &'a mut Harness,
     state: &'a mut WorldState,
     plugins: &'a mut Plugins,
 }
@@ -67,6 +69,7 @@ pub struct World<'a, 'b, 'c, 'd, 'e, 'f> {
 pub struct WorldApp {
     builders: SceneBuilders,
     render: RenderManager,
+    harness: Harness,
     state: WorldState,
     plugins: Plugins,
 }
@@ -87,10 +90,13 @@ impl WorldApp {
             camera_locked: false
         };
 
+        let harness = Harness::new_empty();
+
         WorldApp {
             builders: SceneBuilders(Vec::new()),
             plugins: Plugins(Vec::new()),
             render,
+            harness,
             state,
         }
     }
@@ -120,6 +126,7 @@ impl WorldApp {
 
         app.add_startup_system(setup_environment)
             .insert_non_send_resource(self.render)
+            .insert_non_send_resource(self.harness)
             .insert_non_send_resource(self.plugins)
             .insert_resource(self.state)
             .insert_resource(self.builders)
@@ -172,7 +179,11 @@ impl<'a, 'b, 'c, 'd, 'e, 'f> World<'a, 'b, 'c, 'd, 'e, 'f> {
     }
 
     pub fn init_world(&mut self, objects: ObjectSet) {
-        self.state.action_flags.set(ActionFlags::RESET, true);
+        self.harness.init_world(
+            objects
+        );
+
+        self.state.action_flags.set(ActionFlags::RESET_WORLD_RENDER, true);
         self.state.selected_object = None;
     }
 
@@ -213,6 +224,7 @@ fn update_world(
     builders: NonSendMut<SceneBuilders>,
     mut render: NonSendMut<RenderManager>,
     mut state: ResMut<WorldState>,
+    mut harness: NonSendMut<Harness>,
     mut plugins: NonSendMut<Plugins>,
     mut ui_ctx: ResMut<EguiContext>,
     mut components: Query<(&mut Transform,)>,
@@ -236,18 +248,39 @@ fn update_world(
         let mut world = World {
             render: Some(render_ctx),
             state: &mut *state,
+            harness: &mut *harness,
             plugins: &mut *plugins,
         };
 
         world.handle_events(&*keys);
     }
 
+    if state
+        .action_flags
+        .contains(ActionFlags::RESET_WORLD_RENDER) {
+
+        state.action_flags
+            .set(ActionFlags::RESET_WORLD_RENDER, false);
+
+        for (handle, _) in harness.objects.iter() {
+            render.add_object(
+                &mut commands,
+                meshes,
+                materials,
+                handle,
+                &harness.objects,
+            );
+        }
+    }
+
     {
-        ui::update_ui(&mut ui_ctx, &mut state);
+        let harness = &mut *harness;
+        ui::update_ui(&mut ui_ctx, &mut state, harness);
 
         for plugin in &mut plugins.0 {
             plugin.update_ui(
                 &mut ui_ctx,
+                harness,
                 &mut render,
                 &mut commands,
                 &mut *meshes,
@@ -281,10 +314,10 @@ fn update_world(
     }
 
     render.draw(
-        
+        &harness.objects,
         &mut components,
         &mut *materials,
-    )
+    );
 
     for plugin in &mut plugins.0 {
         plugin.draw(

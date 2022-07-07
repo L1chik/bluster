@@ -1,6 +1,6 @@
 use nalgebra::{Isometry3, Vector3};
 use parry3d::math::{AngVector, Rotation};
-use parry3d::shape::SharedShape;
+use parry3d::shape::{Shape, SharedShape};
 use crate::data::space::Index;
 use super::object_parameters::{ObjectParent, ObjectPosition, ObjectShape, ObjectFlags};
 
@@ -62,11 +62,15 @@ impl ObjectBuilder {
 
 impl SceneObject {
     pub fn position(&self) -> &Isometry3<f32> {
-        &self.position.0
+        &self.position
     }
 
     pub fn transltaion(&self) -> &Vector3<f32> {
         &self.position.0.translation.vector
+    }
+
+    pub fn shape(&self) -> &dyn Shape {
+        self.shape.as_ref()
     }
 }
 
@@ -75,6 +79,7 @@ impl Into<SceneObject> for ObjectBuilder {
         self.build()
     }
 }
+
 
 
 

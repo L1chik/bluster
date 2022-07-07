@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_egui::EguiContext;
+use crate::parameters::Harness;
 use crate::render::{BevyMaterial, RenderManager};
 
 pub trait WorldPlugin {
@@ -23,6 +24,7 @@ pub trait WorldPlugin {
     fn update_ui(
         &mut self,
         ui_context: &EguiContext,
+        harness: &mut Harness,
         render: &mut RenderManager,
         commands: &mut Commands,
         meshes: &mut Assets<Mesh>,

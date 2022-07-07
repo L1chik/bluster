@@ -10,7 +10,7 @@ use bluster::prelude::*;
 
 pub fn init_world(world: &mut World) {
     let mut objects = ObjectSet::new();
-    let object = ObjectBuilder::cube(10.0, 10.0, 10.0);
+    let object = ObjectBuilder::cube(100.0, 100.0, 100.0);
 
     objects.insert(object);
 

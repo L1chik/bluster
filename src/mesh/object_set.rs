@@ -1,3 +1,5 @@
+use std::ops::{Index};
+
 use crate::mesh::object::SceneObject;
 use crate::mesh::object_parameters::ObjectHandle;
 use crate::data::space::Space;
@@ -31,6 +33,18 @@ impl ObjectSet {
 
     pub fn get(&self, handle: ObjectHandle) -> Option<&SceneObject> {
         self.objects.get(handle.0)
+    }
+
+    pub fn iter(&self) -> impl ExactSizeIterator<Item = (ObjectHandle, &SceneObject)> {
+        self.objects.iter().map(|(h, o)| (ObjectHandle(h), o))
+    }
+}
+
+impl Index<ObjectHandle> for ObjectSet {
+    type Output = SceneObject;
+
+    fn index(&self, index: ObjectHandle) -> &SceneObject {
+        &self.objects[index.0]
     }
 }
 

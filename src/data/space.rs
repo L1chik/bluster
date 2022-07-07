@@ -1,4 +1,5 @@
-use std::cmp;
+use std::{cmp, vec, slice, ops};
+use std::iter::{self, Extend, FromIterator, FusedIterator};
 use parry3d::partitioning::IndexedData;
 
 
@@ -24,6 +25,19 @@ enum Entry<T> {
 pub struct Index {
     index: u32,
     generation: u32,
+}
+
+#[derive(Clone, Debug)]
+pub struct IntoIter<T> {
+    len: usize,
+    inner: vec::IntoIter<Entry<T>>,
+}
+
+#[derive(Clone, Debug)]
+
+pub struct Iter<'a, T: 'a> {
+    len: usize,
+    inner: iter::Enumerate<slice::Iter<'a, Entry<T>>>,
 }
 
 impl<T> Space<T> {
@@ -126,6 +140,13 @@ impl<T> Space<T> {
             _ => None,
         }
     }
+
+    pub fn iter(&self) -> Iter<T> {
+        Iter {
+            len: self.len,
+            inner: self.items.iter().enumerate(),
+        }
+    }
 }
 
 impl Index {
@@ -151,5 +172,105 @@ impl IndexedData for Index {
 
     fn index(&self) -> usize {
         self.into_raw_parts().0 as usize
+    }
+}
+
+impl<T> IntoIterator for Space<T> {
+    type Item = T;
+    type IntoIter = IntoIter<T>;
+
+
+    fn into_iter(self) -> Self::IntoIter {
+        IntoIter {
+            len: self.len,
+            inner: self.items.into_iter(),
+        }
+    }
+}
+
+impl<T> Iterator for IntoIter<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            match self.inner.next() {
+                Some(Entry::Free { .. }) => continue,
+                Some(Entry::Used { val, .. }) => {
+                    self.len -= 1;
+
+                    return Some(val);
+                }
+                None => {
+                    debug_assert_eq!(self.len, 0);
+
+                    return None;
+                }
+            }
+        }
+    }
+}
+
+impl<T> ExactSizeIterator for IntoIter<T> {
+    fn len(&self) -> usize {
+        self.len
+    }
+}
+
+impl<T> FusedIterator for IntoIter<T> {}
+
+impl<'a, T> IntoIterator for &'a Space<T> {
+    type Item = (Index, &'a T);
+    type IntoIter = Iter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = (Index, &'a T);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            match self.inner.next() {
+                Some((_, &Entry::Free { .. })) => continue,
+                Some((
+                    index,
+                    &Entry::Used {
+                        generation,
+                        ref val,
+                    },
+                )) => {
+                    self.len -= 1;
+                    let idx = Index {
+                        index: index as u32,
+                        generation,
+                    };
+
+                    return Some((idx, val));
+                }
+                None => {
+                    debug_assert_eq!(self.len, 0);
+
+                    return None;
+                }
+            }
+        }
+    }
+}
+
+impl<'a, T> ExactSizeIterator for Iter<'a, T> {
+    fn len(&self) -> usize {
+        self.len
+    }
+}
+
+impl<'a, T> FusedIterator for Iter<'a, T> {}
+
+impl<T> ops::Index<Index> for Space<T> {
+    type Output = T;
+
+    fn index(&self, index: Index) -> &Self::Output {
+        self.get(index).expect("No element at index")
     }
 }
