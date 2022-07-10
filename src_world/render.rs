@@ -49,7 +49,10 @@ impl RenderManager {
         objects: &ObjectSet
     ) {
         let obj = &objects[handle];
+        let obj_parent = obj.parent().unwrap_or(ObjectHandle::invalid());
         let color = Point3::new(1.0, 1.0, 0.0);
+        let mut nodes = std::mem::replace(
+            self.o2sn.entry(obj_parent).or_insert(vec![]), Vec::new());
 
         self.add_shape(
             commands,
@@ -60,7 +63,10 @@ impl RenderManager {
             obj.position(),
             &Isometry3::identity(),
             color,
+            &mut nodes,
         );
+
+        self.o2sn.insert(obj_parent, nodes);
     }
 
     pub fn add_shape(&mut self,
@@ -72,6 +78,7 @@ impl RenderManager {
         position: &Isometry3<f32>,
         delta: &Isometry3<f32>,
         color: Point3<f32>,
+        out: &mut Vec<EntityWithMaterial>,
     ) {
         if let Some(compound) = shape.as_compound() {
             for (shape_position, shape) in compound.shapes() {
@@ -84,12 +91,27 @@ impl RenderManager {
                     position,
                     &(shape_position * delta),
                     color,
+                    out,
                 )
             }
         } else {
             if self.prefab_meshes.is_empty() {
                 EntityWithMaterial::gen_prefab_meshes(&mut self.prefab_meshes, meshes)
             }
+
+            let node = EntityWithMaterial::spawn(
+                commands,
+                meshes,
+                materials,
+                &self.prefab_meshes,
+                shape,
+                handle,
+                *position,
+                *delta,
+                color,
+            );
+
+            out.push(node);
         }
     }
 

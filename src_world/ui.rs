@@ -1,5 +1,5 @@
 use bevy_egui::{egui, EguiContext, egui::Slider};
-use crate::parameters::Harness;
+use crate::harness::Harness;
 use crate::world::ActionFlags;
 
 

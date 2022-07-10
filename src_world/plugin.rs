@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_egui::EguiContext;
-use crate::parameters::Harness;
+use crate::harness::Harness;
 use crate::render::{BevyMaterial, RenderManager};
 
 pub trait WorldPlugin {
@@ -11,7 +11,8 @@ pub trait WorldPlugin {
         commands: &mut Commands,
         meshes: &mut Assets<Mesh>,
         materials: &mut Assets<BevyMaterial>,
-        components: &mut Query<(&mut Transform, )>,
+        components: &mut Query<(&mut Transform,)>,
+        harness: &mut Harness,
     );
     fn draw(
         &mut self,
@@ -20,6 +21,7 @@ pub trait WorldPlugin {
         meshes: &mut Assets<Mesh>,
         materials: &mut Assets<BevyMaterial>,
         components: &mut Query<(&mut Transform, )>,
+        harness: &mut Harness,
     );
     fn update_ui(
         &mut self,

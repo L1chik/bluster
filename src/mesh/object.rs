@@ -2,6 +2,7 @@ use nalgebra::{Isometry3, Vector3};
 use parry3d::math::{AngVector, Rotation};
 use parry3d::shape::{Shape, SharedShape};
 use crate::data::space::Index;
+use crate::mesh::ObjectHandle;
 use super::object_parameters::{ObjectParent, ObjectPosition, ObjectShape, ObjectFlags};
 
 
@@ -29,7 +30,7 @@ impl ObjectBuilder {
         }
     }
 
-    pub fn cube(hx: f32, hy: f32, hz: f32) -> Self {
+    pub fn cuboid(hx: f32, hy: f32, hz: f32) -> Self {
         Self::new(SharedShape::cuboid(hx, hy, hz))
     }
 
@@ -71,6 +72,10 @@ impl SceneObject {
 
     pub fn shape(&self) -> &dyn Shape {
         self.shape.as_ref()
+    }
+
+    pub fn parent(&self) -> Option<ObjectHandle> {
+        self.parent.map(|p| p.handle)
     }
 }
 

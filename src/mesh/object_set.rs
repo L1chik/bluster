@@ -20,7 +20,7 @@ impl ObjectSet {
         }
     }
 
-    pub fn insert(&mut self, obj: impl Into<SceneObject>) -> ObjectHandle {
+    pub fn insert_obj(&mut self, obj: impl Into<SceneObject>) -> ObjectHandle {
         let mut obj = obj.into();
 
         obj.parent = None;
@@ -28,6 +28,7 @@ impl ObjectSet {
 
         self.changed_objects.push(handle);
 
+        println!("Some handl");
         handle
     }
 

@@ -21,7 +21,6 @@ enum Entry<T> {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[cfg_attr(feature = "serde-serialize", derive(Serialize, Deserialize))]
 pub struct Index {
     index: u32,
     generation: u32,

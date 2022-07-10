@@ -10,12 +10,16 @@ use bluster::prelude::*;
 
 pub fn init_world(world: &mut World) {
     let mut objects = ObjectSet::new();
-    let object = ObjectBuilder::cube(100.0, 100.0, 100.0);
 
-    objects.insert(object);
+    let ground_size = 50.0;
+    let ground_height = 1.0;
+
+
+    let object = ObjectBuilder::cuboid(ground_size, ground_height, ground_size);
+    objects.insert_obj(object);
 
     world.init_world(objects);
-    world.look_at(point![10.0, 100.0, 100.0], Point3::origin());
+    world.look_at(point![100.0, 100.0, 100.0], Point3::origin());
 }
 
 fn models() -> Vec<String> {

@@ -9,7 +9,7 @@ use crate::arc_ball::{ArcBall, ArcBallPlugin};
 use crate::render::{BevyMaterial, RenderManager};
 use crate::{ui, WorldPlugin};
 use bluster::mesh::{SceneObject, ObjectSet};
-use crate::parameters::Harness;
+use crate::harness::Harness;
 
 // Flags for program states
 bitflags! {
@@ -126,10 +126,10 @@ impl WorldApp {
 
         app.add_startup_system(setup_environment)
             .insert_non_send_resource(self.render)
-            .insert_non_send_resource(self.harness)
-            .insert_non_send_resource(self.plugins)
             .insert_resource(self.state)
+            .insert_non_send_resource(self.harness)
             .insert_resource(self.builders)
+            .insert_non_send_resource(self.plugins)
             .add_stage_before(CoreStage::Update, "simulation", SystemStage::single_threaded())
             .add_system_to_stage("simulation", update_world)
             .add_system(egui_action);
@@ -255,6 +255,7 @@ fn update_world(
         world.handle_events(&*keys);
     }
 
+    println!("{:?}", state.action_flags);
     if state
         .action_flags
         .contains(ActionFlags::RESET_WORLD_RENDER) {
@@ -269,6 +270,17 @@ fn update_world(
                 materials,
                 handle,
                 &harness.objects,
+            );
+        }
+
+        for plugin in &mut plugins.0 {
+            plugin.init_render(
+                &mut render,
+                &mut commands,
+                meshes,
+                materials,
+                &mut components,
+                &mut harness,
             );
         }
     }
@@ -290,28 +302,28 @@ fn update_world(
         }
     }
 
-    {
-        let reset = state.action_flags.contains(ActionFlags::RESET);
-
-        if reset {
-            state.action_flags.set(ActionFlags::RESET, false);
-            state.camera_locked = true;
-            state.action_flags
-                .set(ActionFlags::PROGRAM_CHANGED, true);
-        }
+    // {
+    //     let reset = state.action_flags.contains(ActionFlags::RESET);
+    //
+    //     if reset {
+    //         state.action_flags.set(ActionFlags::RESET, false);
+    //         state.camera_locked = true;
+    //         state.action_flags
+    //             .set(ActionFlags::PROGRAM_CHANGED, true);
+    //     }
 
         // let program_changed = state.action_flags.contains(ActionFlags::PROGRAM_CHANGED);
         // if program_changed {
         //     state.action_flags
         //         .set(ActionFlags::PROGRAM_CHANGED, false);
         // }
-    }
+    // }
 
-    if let Some(window) = windows.get_primary() {
-        for (camera, camera_pos, _) in cameras.iter_mut() {
-
-        }
-    }
+    // if let Some(window) = windows.get_primary() {
+    //     for (camera, camera_pos, _) in cameras.iter_mut() {
+    //
+    //     }
+    // }
 
     render.draw(
         &harness.objects,
@@ -325,7 +337,8 @@ fn update_world(
             &mut commands,
             meshes,
             materials,
-            &mut components
+            &mut components,
+            &mut harness
         );
     }
 }

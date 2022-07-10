@@ -9,5 +9,5 @@ mod geometry;
 mod world;
 mod arc_ball;
 mod ui;
-pub mod parameters;
+pub mod harness;
 // mod arc_ball;

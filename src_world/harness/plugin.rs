@@ -1,7 +1,7 @@
 use bluster::mesh::ObjectSet;
-use crate::parameters::RunState;
+use crate::harness::RunState;
 
-pub trait ParametersPlugin {
+pub trait HarnessPlugin {
     fn run_callbacks(
         &mut self,
         objects: &mut ObjectSet,

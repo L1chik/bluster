@@ -2,11 +2,17 @@ use std::ops::{Deref, DerefMut};
 use nalgebra::Isometry3;
 use parry3d::shape::SharedShape;
 
+
+// STRUCTURES
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct ObjectPosition(pub Isometry3<f32>);
 
-#[derive(Clone)]
-pub struct ObjectParent {}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct ObjectParent {
+    pub handle: ObjectHandle,
+    pub pos_wrt_parent: Isometry3<f32>,
+}
 
 pub type ObjectShape = SharedShape;
 
@@ -15,6 +21,15 @@ pub struct ObjectFlags {}
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Default)]
 pub struct ObjectHandle(pub crate::data::space::Index);
+
+impl ObjectHandle {
+    pub fn invalid() -> Self {
+        Self(crate::data::space::Index::from_raw_parts(
+            u32::MAX,
+            u32::MAX,
+        ))
+    }
+}
 
 impl ObjectPosition {
     /// The identity position.
