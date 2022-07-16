@@ -13,6 +13,7 @@ pub type BevyMaterial = StandardMaterial;
 
 pub struct RenderManager {
     o2sn: HashMap<ObjectHandle, Vec<EntityWithMaterial>>,
+    o2color: HashMap<ObjectHandle, Point3<f32>>,
     ground_color: Point3<f32>,
     prefab_meshes: HashMap<ShapeType, Handle<Mesh>>,
     pub gfx_shift: Vector3<f32>,
@@ -23,6 +24,7 @@ impl RenderManager {
         RenderManager {
             ground_color: point![0.192, 0.192, 0.192],
             o2sn: HashMap::new(),
+            o2color: HashMap::new(),
             prefab_meshes: HashMap::new(),
             gfx_shift: Vector3::zeros(),
         }
@@ -50,7 +52,8 @@ impl RenderManager {
     ) {
         let obj = &objects[handle];
         let obj_parent = obj.parent().unwrap_or(ObjectHandle::invalid());
-        let color = Point3::new(1.0, 1.0, 0.0);
+        let color = self.o2color.get(&obj_parent).copied().unwrap_or(self.ground_color);
+
         let mut nodes = std::mem::replace(
             self.o2sn.entry(obj_parent).or_insert(vec![]), Vec::new());
 
@@ -117,6 +120,17 @@ impl RenderManager {
 
     pub fn prefab_meshes(&self) -> &HashMap<ShapeType, Handle<Mesh>> {
         &self.prefab_meshes
+    }
+
+    pub fn clear(&mut self, commands: &mut Commands) {
+        for sns in self.o2sn.values_mut() {
+            for sn in sns.iter_mut() {
+                commands.entity(sn.entity).despawn()
+            }
+        }
+
+        self.o2sn.clear();
+        self.o2color.clear();
     }
 }
 

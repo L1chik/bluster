@@ -15,6 +15,7 @@ pub struct SceneObject {
     pub user_data: u128,
 }
 
+#[derive(Clone)]
 pub struct ObjectBuilder {
     pub shape: SharedShape,
     pub position: Isometry3<f32>,

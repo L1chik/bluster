@@ -184,11 +184,19 @@ impl<'a, 'b, 'c, 'd, 'e, 'f> World<'a, 'b, 'c, 'd, 'e, 'f> {
         );
 
         self.state.action_flags.set(ActionFlags::RESET_WORLD_RENDER, true);
+        dbg!(self.state.action_flags);
         self.state.selected_object = None;
     }
 
     pub fn handle_events(&mut self, keys: &Input<KeyCode>) {
-        print!("")
+        for key in keys.get_just_released() {
+            match *key {
+                KeyCode::T => {
+                    println!("T is pressed")
+                }
+                _ => {}
+            }
+        }
     }
 }
 
@@ -235,6 +243,7 @@ fn update_world(
     let materials = &mut *materials;
     let last_program = state.selected_program;
 
+
     {
         let render_ctx = WorldRender {
             render: &mut *render,
@@ -255,36 +264,7 @@ fn update_world(
         world.handle_events(&*keys);
     }
 
-    println!("{:?}", state.action_flags);
-    if state
-        .action_flags
-        .contains(ActionFlags::RESET_WORLD_RENDER) {
-
-        state.action_flags
-            .set(ActionFlags::RESET_WORLD_RENDER, false);
-
-        for (handle, _) in harness.objects.iter() {
-            render.add_object(
-                &mut commands,
-                meshes,
-                materials,
-                handle,
-                &harness.objects,
-            );
-        }
-
-        for plugin in &mut plugins.0 {
-            plugin.init_render(
-                &mut render,
-                &mut commands,
-                meshes,
-                materials,
-                &mut components,
-                &mut harness,
-            );
-        }
-    }
-
+    // UI
     {
         let harness = &mut *harness;
         ui::update_ui(&mut ui_ctx, &mut state, harness);
@@ -302,28 +282,76 @@ fn update_world(
         }
     }
 
-    // {
-    //     let reset = state.action_flags.contains(ActionFlags::RESET);
-    //
-    //     if reset {
-    //         state.action_flags.set(ActionFlags::RESET, false);
-    //         state.camera_locked = true;
-    //         state.action_flags
-    //             .set(ActionFlags::PROGRAM_CHANGED, true);
-    //     }
+    {
+        let program_changed = state.action_flags
+            .contains(ActionFlags::PROGRAM_CHANGED);
+        if program_changed {
+            state.action_flags
+                .set(ActionFlags::PROGRAM_CHANGED, false);
 
-        // let program_changed = state.action_flags.contains(ActionFlags::PROGRAM_CHANGED);
-        // if program_changed {
-        //     state.action_flags
-        //         .set(ActionFlags::PROGRAM_CHANGED, false);
-        // }
-    // }
+            clear(&mut commands, &mut state, &mut render, &mut plugins);
 
-    // if let Some(window) = windows.get_primary() {
-    //     for (camera, camera_pos, _) in cameras.iter_mut() {
-    //
-    //     }
-    // }
+            for plugin in (*plugins).0.iter_mut() {
+                plugin.clear_render(&mut render, &mut commands);
+            }
+
+            (*plugins).0.clear();
+
+            let selected_program = state.selected_program;
+            let render = &mut *render;
+            let meshes = &mut *meshes;
+
+            let render_ctx = WorldRender {
+                render: &mut *render,
+                commands: &mut commands,
+                meshes: &mut *meshes,
+                material: &mut *materials,
+                components: &mut components,
+                camera: &mut cameras.iter_mut().next().unwrap().2,
+            };
+
+            let mut world = World {
+                render: Some(render_ctx),
+                state: &mut *state,
+                harness: &mut *harness,
+                plugins: &mut *plugins,
+            };
+
+            builders.0[selected_program].1(&mut world);
+
+            state.camera_locked = false;
+        }
+
+         if state
+            .action_flags
+            .contains(ActionFlags::RESET_WORLD_RENDER) {
+
+            state.action_flags
+                .set(ActionFlags::RESET_WORLD_RENDER, false);
+
+            dbg!("from action flag");
+            for (handle, _) in harness.objects.iter() {
+                render.add_object(
+                    &mut commands,
+                    meshes,
+                    materials,
+                    handle,
+                    &harness.objects,
+                );
+            }
+
+            for plugin in &mut plugins.0 {
+                plugin.init_render(
+                    &mut render,
+                    &mut commands,
+                    meshes,
+                    materials,
+                    &mut components,
+                    &mut harness,
+                );
+            }
+        }
+    }
 
     render.draw(
         &harness.objects,
@@ -351,7 +379,7 @@ fn setup_environment(
         .spawn_bundle(DirectionalLightBundle {
         directional_light: DirectionalLight {
             illuminance: 10000.0,
-            shadows_enabled: false,
+            shadows_enabled: true,
             ..Default::default()
         },
         transform: Transform {
@@ -361,11 +389,6 @@ fn setup_environment(
         },
         ..Default::default()
         });
-
-    commands.spawn_bundle(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane { size: 5.0 })),
-        ..default()
-    });
 
     commands
         .spawn_bundle(PerspectiveCameraBundle {
@@ -381,4 +404,17 @@ fn setup_environment(
         .insert(ArcBall {
             ..ArcBall::default()
         });
+}
+
+fn clear(
+    commands: &mut Commands,
+    state: &mut WorldState,
+    render: &mut RenderManager,
+    plugins: &mut Plugins,
+) {
+    render.clear(commands);
+
+    for mut plugin in plugins.0.drain(..) {
+        plugin.clear_render(render, commands);
+    }
 }

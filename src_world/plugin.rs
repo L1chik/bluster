@@ -14,6 +14,7 @@ pub trait WorldPlugin {
         components: &mut Query<(&mut Transform,)>,
         harness: &mut Harness,
     );
+    fn clear_render(&mut self, render: &mut RenderManager, commnads: &mut Commands);
     fn draw(
         &mut self,
         render: &mut RenderManager,

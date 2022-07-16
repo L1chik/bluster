@@ -11,8 +11,8 @@ use bluster::prelude::*;
 pub fn init_world(world: &mut World) {
     let mut objects = ObjectSet::new();
 
-    let ground_size = 50.0;
-    let ground_height = 1.0;
+    let ground_size = 100.1;
+    let ground_height = 2.1;
 
 
     let object = ObjectBuilder::cuboid(ground_size, ground_height, ground_size);

@@ -20,6 +20,7 @@ pub struct EntityWithMaterial {
     pub base_color: Point3<f32>,
     pub object: Option<ObjectHandle>,
     pub delta: Isometry3<f32>,
+    pub opacity: f32,
     material: Handle<BevyMaterial>,
 }
 
@@ -43,13 +44,15 @@ impl EntityWithMaterial {
             .cloned()
             .or_else(|| generate_obj_mesh(shape).map(|m| meshes.add(m)));
 
-        let bevy_color = Color::rgb(color.x, color.y, color.z);
+        let opacity = 1.0;
+        let bevy_color = Color::rgba(color.x, color.y, color.z, opacity);
         let shape_pos = object_position * delta;
         let mut transform = Transform::from_scale(scale);
 
         transform.translation.x = shape_pos.translation.vector.x as f32;
         transform.translation.y = shape_pos.translation.vector.y as f32;
         transform.translation.z = shape_pos.translation.vector.z as f32;
+
         transform.rotation = Quat::from_xyzw(
             shape_pos.rotation.i as f32,
             shape_pos.rotation.j as f32,
@@ -78,8 +81,6 @@ impl EntityWithMaterial {
             entity_commands.insert_bundle(bundle);
         }
 
-
-
         EntityWithMaterial {
             entity,
             color,
@@ -87,6 +88,7 @@ impl EntityWithMaterial {
             object,
             delta,
             material: weak_material_handle,
+            opacity,
         }
     }
 
