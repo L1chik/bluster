@@ -1,6 +1,7 @@
 use std::ops::RangeInclusive;
-use bevy::input::mouse::MouseMotion;
+use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::*;
+use bevy_egui::egui::color_picker::color_edit_button_hsva;
 
 #[derive(Component)]
 pub struct ArcBall {
@@ -11,6 +12,7 @@ pub struct ArcBall {
     pub center: Vec3,
     pub rotate_sensitivity: f32,
     pub pan_sensitivity: f32,
+    pub zoom_sensitivity: f32,
     pub rotate_button: MouseButton,
     pub pan_button:MouseButton,
     pub enabled: bool,
@@ -25,7 +27,8 @@ impl Default for ArcBall {
             distance: 8.0,
             center: Vec3::ZERO,
             rotate_sensitivity: 0.3,
-            pan_sensitivity: 1.0,
+            pan_sensitivity: 1.5,
+            zoom_sensitivity: 0.5,
             rotate_button: MouseButton::Middle,
             pan_button: MouseButton::Right,
             enabled: true,
@@ -44,6 +47,26 @@ impl ArcBallPlugin {
 
             transform.translation = (rot * Vec3::Y) * camera.distance + camera.center;
             transform.look_at(camera.center, Vec3::Y);
+        }
+    }
+
+    fn zoom_system(
+        mut mouse_wheel_events: EventReader<MouseWheel>,
+        mut query: Query<&mut ArcBall, With<Camera>>,
+    ) {
+        let mut total = 0.0;
+
+        for event in mouse_wheel_events.iter() {
+            total += event.y * match event.unit {
+                Line => 1.0,
+                Pixel => 0.1,
+            };
+        }
+
+        for mut camera in query.iter_mut() {
+            if camera.enabled {
+                camera.distance *= camera.zoom_sensitivity.powf(total);
+            }
         }
     }
 
@@ -90,6 +113,7 @@ pub struct ArcBallPlugin;
 impl Plugin for ArcBallPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(Self::mouse_motion)
+            .add_system(Self::zoom_system)
             .add_system(Self::update_transform);
     }
 }

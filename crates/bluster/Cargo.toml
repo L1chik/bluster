@@ -10,4 +10,6 @@ path = "../../src/lib.rs"
 [dependencies]
 nalgebra = "0.31.0"
 parry3d = "0.9.0"
+thiserror = "1.0.31"
+obj-rs = "0.7.0"
 serde = { version = "1", features = [ "derive" ], optional = true }

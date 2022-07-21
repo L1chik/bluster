@@ -10,4 +10,5 @@ mod world;
 mod arc_ball;
 mod ui;
 pub mod harness;
+mod synergy;
 // mod arc_ball;

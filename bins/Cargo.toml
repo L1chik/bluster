@@ -8,6 +8,7 @@ default-run = "labs"
 bevy = "0.7.0"
 bevy_obj = "0.7.0"
 nalgebra = "0.31.0"
+parry3d = "0.9.0"
 obj-rs = { version =  "0.7.0", default-features = false }
 
 

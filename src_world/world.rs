@@ -3,7 +3,8 @@ use bevy::prelude::*;
 use bevy_obj::*;
 use bevy_egui::EguiContext;
 use bitflags::bitflags;
-use na::Point3;
+use na::{Point3, Vector3};
+use parry3d::query::Ray;
 
 use crate::arc_ball::{ArcBall, ArcBallPlugin};
 use crate::render::{BevyMaterial, RenderManager};
@@ -416,5 +417,29 @@ fn clear(
 
     for mut plugin in plugins.0.drain(..) {
         plugin.clear_render(render, commands);
+    }
+}
+
+fn select_object(
+    materials: &mut Assets<BevyMaterial>,
+    render: &mut GraphicsManager,
+    world_state: &mut TestbedState,
+    physics: &PhysicsState,
+    window: &Window,
+    camera: &Camera,
+    camera_transform: &GlobalTransform,
+)
+{
+
+    if let Some(cursor) = window.cursor_position() {
+        let ndc_cursor = (cursor / Vec2::new(window.width(), window.height()) * 2.0) - Vec2::ONE;
+        let ndc_to_world = camera_transform.compute_matrix() * camera.projection_matrix.inverse();
+        let ray_pt1 = ndc_to_world.project_point3(Vec3::new(ndc_cursor.x, ndc_cursor.y, -1.0));
+        let ray_pt2 = ndc_to_world.project_point3(Vec3::new(ndc_cursor.x, ndc_cursor.y, 1.0));
+        let ray_dir = ray_pt2 - ray_pt1;
+        let ray_origin = Point3::new(ray_pt1.x as f32, ray_pt1.y as f32, ray_pt1.z as f32);
+        let ray_dir = Vector3::new(ray_dir.x as f32, ray_dir.y as f32, ray_dir.z as f32);
+
+        let ray = Ray::new(ray_origin, ray_dir);
     }
 }
