@@ -3,7 +3,7 @@ use parry3d::math::{AngVector, Rotation};
 use parry3d::shape::{Shape, SharedShape};
 use crate::data::space::Index;
 use crate::mesh::ObjectHandle;
-use super::object_parameters::{ObjectParent, ObjectPosition, ObjectShape, ObjectFlags};
+use super::object_parameters::{ObjectParent, ObjectPosition, ObjectShape, ObjectFlags, ObjectChanges};
 
 
 #[derive(Clone)]
@@ -11,6 +11,7 @@ pub struct SceneObject {
     pub(crate) shape: ObjectShape,
     pub(crate) parent: Option<ObjectParent>,
     pub(crate) position: ObjectPosition,
+    pub(crate) changes: ObjectChanges,
     pub(crate) flags: ObjectFlags,
     pub user_data: u128,
 }
@@ -39,11 +40,13 @@ impl ObjectBuilder {
         let shape = self.shape.clone();
         let flags = ObjectFlags {};
         let position = ObjectPosition(self.position);
+        let changes = ObjectChanges::empty();
 
         SceneObject {
             shape,
             parent: None,
             position,
+            changes,
             flags,
             user_data: self.user_data,
         }
@@ -63,6 +66,11 @@ impl ObjectBuilder {
 }
 
 impl SceneObject {
+    pub fn set_rotation(&mut self, rotation: AngVector<f32>) {
+        self.changes.insert(ObjectChanges::POSITION);
+        self.position.0.rotation = Rotation::new(rotation);
+    }
+
     pub fn position(&self) -> &Isometry3<f32> {
         &self.position
     }

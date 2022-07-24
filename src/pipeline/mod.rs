@@ -1,1 +1,1 @@
-mod query_pipeline;
+pub mod query_pipeline;

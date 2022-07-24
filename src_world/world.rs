@@ -9,8 +9,9 @@ use parry3d::query::Ray;
 use crate::arc_ball::{ArcBall, ArcBallPlugin};
 use crate::render::{BevyMaterial, RenderManager};
 use crate::{ui, WorldPlugin};
-use bluster::mesh::{SceneObject, ObjectSet};
+use bluster::mesh::{SceneObject, ObjectSet, ObjectHandle};
 use crate::harness::Harness;
+use crate::synergy::SynergyState;
 
 // Flags for program states
 bitflags! {
@@ -39,7 +40,7 @@ pub enum RunMode {
 
 pub struct WorldState {
     pub running: RunMode,
-    pub selected_object: Option<String>,
+    pub selected_object: Option<ObjectHandle>,
     pub program_names: Vec<&'static str>,
     pub selected_program: usize,
     pub state_flags: StateFlags,
@@ -422,9 +423,9 @@ fn clear(
 
 fn select_object(
     materials: &mut Assets<BevyMaterial>,
-    render: &mut GraphicsManager,
-    world_state: &mut TestbedState,
-    physics: &PhysicsState,
+    render: &mut RenderManager,
+    world_state: &mut WorldState,
+    physics: &SynergyState,
     window: &Window,
     camera: &Camera,
     camera_transform: &GlobalTransform,

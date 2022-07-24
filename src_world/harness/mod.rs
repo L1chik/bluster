@@ -20,9 +20,26 @@ impl RunState {
     }
 }
 
+pub struct Robot {
+    pub joint: f32,
+    pub position: i32,
+    pub tool: usize
+}
+
+impl Robot {
+    pub fn new() -> Self {
+        Self {
+            joint: 0.0,
+            position: 0,
+            tool: 0,
+        }
+    }
+}
+
 pub struct Harness {
     pub objects: ObjectSet,
     pub state: RunState,
+    pub robot: Robot,
     plugins: Vec<Box<dyn HarnessPlugin>>
 }
 
@@ -32,6 +49,7 @@ impl Harness {
 
         Harness {
             state,
+            robot: Robot::new(),
             objects: ObjectSet::new(),
             plugins: Vec::new(),
         }

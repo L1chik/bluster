@@ -39,6 +39,15 @@ impl ObjectPosition {
     }
 }
 
+bitflags::bitflags! {
+    pub struct ObjectChanges: u32 {
+        const MODIFIED = 1 << 0;
+        const PARENT = 1 << 2;
+        const POSITION = 1 << 3;
+    }
+}
+
+
 impl AsRef<Isometry3<f32>> for ObjectPosition {
     #[inline]
     fn as_ref(&self) -> &Isometry3<f32> {

@@ -1,4 +1,5 @@
-use std::ops::{Index};
+use std::ops::{Index, IndexMut};
+use std::ptr::hash;
 
 use crate::mesh::object::SceneObject;
 use crate::mesh::object_parameters::ObjectHandle;
@@ -36,6 +37,11 @@ impl ObjectSet {
         self.objects.get(handle.0)
     }
 
+    pub fn get_mut(&mut self, handle: ObjectHandle) -> Option<&mut SceneObject> {
+        let result = self.objects.get_mut(handle.0)?;
+        Some(result)
+    }
+
     pub fn iter(&self) -> impl ExactSizeIterator<Item = (ObjectHandle, &SceneObject)> {
         self.objects.iter().map(|(h, o)| (ObjectHandle(h), o))
     }
@@ -44,8 +50,16 @@ impl ObjectSet {
 impl Index<ObjectHandle> for ObjectSet {
     type Output = SceneObject;
 
-    fn index(&self, index: ObjectHandle) -> &SceneObject {
+    fn index(&self, index: ObjectHandle) -> & Self::Output {
         &self.objects[index.0]
+    }
+}
+
+impl IndexMut<ObjectHandle> for ObjectSet {
+    fn index_mut(&mut self, index: ObjectHandle) -> &mut Self::Output {
+        let object = &mut self.objects[index.0];
+
+        object
     }
 }
 

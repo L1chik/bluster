@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::BufReader;
 use bevy::prelude::*;
 use bevy_obj::*;
-use nalgebra::{Point3, point};
+use nalgebra::{Point3, point, Vector3};
 use obj::raw::object::Polygon;
 use parry3d::shape::SharedShape;
 
@@ -19,48 +19,51 @@ pub fn init_world(world: &mut World) {
     let ground_height = 2.1;
 
 
-    let object = ObjectBuilder::cuboid(ground_size, ground_height, ground_size);
-    // objects.insert_obj(object);
+    let mut object = ObjectBuilder::cuboid(ground_size, ground_height, ground_size);
+    let cube = objects.insert(object);
 
-    let geoms = models();
-    let ngeoms = geoms.len();
+    let mut body = objects.get_mut(cube).unwrap();
+    body.set_rotation(Vector3::new(1.0, 1.0, 0.0));
 
-    for (igeom, obj_path) in geoms.into_iter().enumerate() {
-        let mut shapes = Vec::new();
-        let input = BufReader::new(File::open(obj_path).unwrap());
-
-        if let Ok(model) = obj::raw::parse_obj(input) {
-            let mut vertices: Vec<_> = model
-                .positions
-                .iter()
-                .map(|v| point![v.0, v.1, v.2])
-                .collect();
-
-            let indices: Vec<_> = model
-                .polygons
-                .into_iter()
-                .flat_map(|p| match p {
-                    Polygon::P(idx) => idx.into_iter(),
-                    Polygon::PT(idx) => Vec::from_iter(idx.into_iter().map(|i| i.0)).into_iter(),
-                    Polygon::PN(idx) => Vec::from_iter(idx.into_iter().map(|i| i.0)).into_iter(),
-                    Polygon::PTN(idx) => Vec::from_iter(idx.into_iter().map(|i| i.0)).into_iter(),
-                })
-                .collect();
-
-            let indices: Vec<_> = indices
-                .chunks(3)
-                .map(|idx| [idx[0] as u32, idx[1] as u32, idx[2] as u32])
-                .collect();
-
-            let shape = SharedShape::trimesh(vertices, indices);
-            shapes.push(shape);
-
-            for shape in &shapes {
-                let object = ObjectBuilder::new(shape.clone());
-                objects.insert(object);
-            }
-        }
-    }
+    // let geoms = models();
+    // let ngeoms = geoms.len();
+    //
+    // for (igeom, obj_path) in geoms.into_iter().enumerate() {
+    //     let mut shapes = Vec::new();
+    //     let input = BufReader::new(File::open(obj_path).unwrap());
+    //
+    //     if let Ok(model) = obj::raw::parse_obj(input) {
+    //         let mut vertices: Vec<_> = model
+    //             .positions
+    //             .iter()
+    //             .map(|v| point![v.0, v.1, v.2])
+    //             .collect();
+    //
+    //         let indices: Vec<_> = model
+    //             .polygons
+    //             .into_iter()
+    //             .flat_map(|p| match p {
+    //                 Polygon::P(idx) => idx.into_iter(),
+    //                 Polygon::PT(idx) => Vec::from_iter(idx.into_iter().map(|i| i.0)).into_iter(),
+    //                 Polygon::PN(idx) => Vec::from_iter(idx.into_iter().map(|i| i.0)).into_iter(),
+    //                 Polygon::PTN(idx) => Vec::from_iter(idx.into_iter().map(|i| i.0)).into_iter(),
+    //             })
+    //             .collect();
+    //
+    //         let indices: Vec<_> = indices
+    //             .chunks(3)
+    //             .map(|idx| [idx[0] as u32, idx[1] as u32, idx[2] as u32])
+    //             .collect();
+    //
+    //         let shape = SharedShape::trimesh(vertices, indices);
+    //         shapes.push(shape);
+    //
+    //         for shape in &shapes {
+    //             let object = ObjectBuilder::new(shape.clone());
+    //             objects.insert(object);
+    //         }
+    //     }
+    // }
 
     world.init_world(objects);
     world.look_at(point![100.0, 100.0, 100.0], Point3::origin());

@@ -140,6 +140,15 @@ impl<T> Space<T> {
         }
     }
 
+    pub fn get_mut(&mut self, i: Index) -> Option<&mut T> {
+        match self.items.get_mut(i.index as usize) {
+            Some(Entry::Used { generation, val }) if *generation == i.generation => {
+                Some(val)
+            }
+            _ => None,
+        }
+    }
+
     pub fn iter(&self) -> Iter<T> {
         Iter {
             len: self.len,
@@ -271,5 +280,11 @@ impl<T> ops::Index<Index> for Space<T> {
 
     fn index(&self, index: Index) -> &Self::Output {
         self.get(index).expect("No element at index")
+    }
+}
+
+impl<T> ops::IndexMut<Index> for Space<T> {
+    fn index_mut(&mut self, index: Index) -> &mut Self::Output {
+        self.get_mut(index).expect("No element at index")
     }
 }
