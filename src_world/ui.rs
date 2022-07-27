@@ -29,9 +29,8 @@ pub fn update_ui(ui_ctx: &mut EguiContext, state: &mut WorldState, harness: &mut
 
         let robot = &mut harness.robot;
 
-        egui::Slider::sli
+
         ui.add(Slider::new(&mut robot.joint, -90.0..=90.0)
-            .slider_width(300)
             .fixed_decimals(3)
             .text("Joint 1"));
 
